@@ -21,5 +21,8 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+
+    // 🔹 Add this line to fix "Delete ␍" errors
+    'prettier/prettier': ['error', { endOfLine: 'auto' }],
   },
 };
