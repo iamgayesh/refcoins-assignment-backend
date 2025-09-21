@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 @Schema()
 export class Status extends Document {
   @Prop({ required: true, unique: true })
-  statusId: string;
+  statusId: number;
 
   @Prop({ required: true })
   statusDescription: string;
