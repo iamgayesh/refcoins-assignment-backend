@@ -10,7 +10,7 @@ export class LocationService {
   ) {}
 
   async create(
-    locationId: number,
+    locationId: string,
     locationDescription: string,
   ): Promise<Location> {
     const location = new this.locationModel({

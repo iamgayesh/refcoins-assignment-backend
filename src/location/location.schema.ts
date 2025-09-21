@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 @Schema()
 export class Location extends Document {
   @Prop({ required: true, unique: true })
-  locationId: number;
+  locationId: string;
 
   @Prop({ required: true })
   locationDescription: string;
