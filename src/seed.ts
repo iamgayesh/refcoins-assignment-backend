@@ -109,7 +109,7 @@ async function bootstrap() {
 
     // Seed Admin User
     console.log('👤 Seeding admin user...');
-    await userService.create('admin', 'admin123', 'admin');
+    await userService.create('admin', 'admin123', 'ADMIN');
     console.log('✅ Created admin user');
 
     console.log('🎉 Database seeding completed successfully!');

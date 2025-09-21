@@ -9,7 +9,7 @@ export class User {
   @Prop({ required: true })
   password: string; // store bcrypt hash
 
-  @Prop({ required: true, enum: ['admin', 'customer'] })
+  @Prop({ required: true, enum: ['ADMIN', 'CUSTOMER'] })
   userType: string;
 }
 
