@@ -15,27 +15,121 @@ export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
   @Post()
-  create(@Body() dto: CreatePropertyDto) {
-    return this.propertyService.create(dto);
+  async create(@Body() dto: CreatePropertyDto) {
+    try {
+      const property = await this.propertyService.create(dto);
+      return {
+        responseCode: '00',
+        responseMsg: 'Property created successfully',
+        content: property,
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to create property',
+        content: null,
+        exception: error.message,
+      };
+    }
   }
 
   @Get()
-  findAll() {
-    return this.propertyService.findAll();
+  async findAll() {
+    try {
+      const properties = await this.propertyService.findAll();
+      return {
+        responseCode: '00',
+        responseMsg: 'Properties retrieved successfully',
+        content: properties,
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to retrieve properties',
+        content: null,
+        exception: error.message,
+      };
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.propertyService.findOne(id);
+  async findOne(@Param('id') id: number) {
+    try {
+      const property = await this.propertyService.findOne(id);
+      if (!property) {
+        return {
+          responseCode: '01',
+          responseMsg: 'Property not found',
+          content: null,
+          exception: null,
+        };
+      }
+      return {
+        responseCode: '00',
+        responseMsg: 'Property retrieved successfully',
+        content: property,
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to retrieve property',
+        content: null,
+        exception: error.message,
+      };
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @Body() dto: Partial<CreatePropertyDto>) {
-    return this.propertyService.update(id, dto);
+  async update(
+    @Param('id') id: number,
+    @Body() dto: Partial<CreatePropertyDto>,
+  ) {
+    try {
+      const property = await this.propertyService.update(id, dto);
+      if (!property) {
+        return {
+          responseCode: '01',
+          responseMsg: 'Property not found',
+          content: null,
+          exception: null,
+        };
+      }
+      return {
+        responseCode: '00',
+        responseMsg: 'Property updated successfully',
+        content: property,
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to update property',
+        content: null,
+        exception: error.message,
+      };
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.propertyService.remove(id);
+  async remove(@Param('id') id: number) {
+    try {
+      const result = await this.propertyService.remove(id);
+      return {
+        responseCode: '00',
+        responseMsg: 'Property deleted successfully',
+        content: result,
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to delete property',
+        content: null,
+        exception: error.message,
+      };
+    }
   }
 }

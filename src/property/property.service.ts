@@ -3,32 +3,198 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Property } from './property.schema';
 import { CreatePropertyDto } from './dto/create-property.dto';
+import { Location } from '../location/location.schema';
+import { Type } from '../type/type.schema';
+import { Status } from '../status/status.schema';
 
 @Injectable()
 export class PropertyService {
   constructor(
     @InjectModel(Property.name) private propertyModel: Model<Property>,
+    @InjectModel(Location.name) private locationModel: Model<Location>,
+    @InjectModel(Type.name) private typeModel: Model<Type>,
+    @InjectModel(Status.name) private statusModel: Model<Status>,
   ) {}
 
   // Create a new property
-  async create(createPropertyDto: CreatePropertyDto): Promise<Property> {
-    const property = new this.propertyModel(createPropertyDto);
-    return property.save();
+  async create(createPropertyDto: CreatePropertyDto): Promise<any> {
+    try {
+      // Get the next available propertyId
+      const lastProperty = await this.propertyModel
+        .findOne()
+        .sort({ propertyId: -1 })
+        .exec();
+
+      const nextPropertyId = lastProperty ? lastProperty.propertyId + 1 : 1;
+
+      // Create property with auto-generated ID
+      const propertyData = {
+        ...createPropertyDto,
+        propertyId: nextPropertyId,
+      };
+
+      const property = new this.propertyModel(propertyData);
+      const savedProperty = await property.save();
+
+      // Return the property with lookup data
+      const location = await this.locationModel
+        .findOne({ locationId: savedProperty.propertyLocation })
+        .exec();
+
+      const type = await this.typeModel
+        .findOne({ typeId: savedProperty.propertyType })
+        .exec();
+
+      const status = await this.statusModel
+        .findOne({ statusId: savedProperty.propertyStatus })
+        .exec();
+
+      return {
+        propertyId: savedProperty.propertyId,
+        propertyTitle: savedProperty.propertyTitle,
+        propertySlug: savedProperty.propertySlug,
+        propertyLocation: location
+          ? {
+              locationId: location.locationId,
+              locationDescription: location.locationDescription,
+            }
+          : null,
+        propertyDescription: savedProperty.propertyDescription,
+        propertyPrice: savedProperty.propertyPrice,
+        propertyType: type
+          ? {
+              typeId: type.typeId,
+              typeDescription: type.typeDescription,
+            }
+          : null,
+        propertyStatus: status
+          ? {
+              statusId: status.statusId,
+              statusDescription: status.statusDescription,
+            }
+          : null,
+        propertyArea: savedProperty.propertyArea,
+        propertyImagePath: savedProperty.propertyImagePath,
+        createdAt: savedProperty.createdAt,
+        updatedAt: savedProperty.updatedAt,
+      };
+    } catch (error) {
+      throw new Error(`Failed to create property: ${error.message}`);
+    }
   }
 
-  // Get all properties (with populated refs)
-  async findAll(): Promise<Property[]> {
-    return this.propertyModel
-      .find()
-      .populate('propertyLocation')
-      .populate('propertyType')
-      .populate('propertyStatus')
-      .exec();
+  // Get all properties with manual lookups
+  async findAll(): Promise<any[]> {
+    try {
+      const properties = await this.propertyModel.find().exec();
+
+      // Manually lookup related data
+      const propertiesWithLookups = await Promise.all(
+        properties.map(async (property) => {
+          const location = await this.locationModel
+            .findOne({ locationId: property.propertyLocation })
+            .exec();
+
+          const type = await this.typeModel
+            .findOne({ typeId: property.propertyType })
+            .exec();
+
+          const status = await this.statusModel
+            .findOne({ statusId: property.propertyStatus })
+            .exec();
+
+          return {
+            propertyId: property.propertyId,
+            propertyTitle: property.propertyTitle,
+            propertySlug: property.propertySlug,
+            propertyLocation: location
+              ? {
+                  locationId: location.locationId,
+                  locationDescription: location.locationDescription,
+                }
+              : null,
+            propertyDescription: property.propertyDescription,
+            propertyPrice: property.propertyPrice,
+            propertyType: type
+              ? {
+                  typeId: type.typeId,
+                  typeDescription: type.typeDescription,
+                }
+              : null,
+            propertyStatus: status
+              ? {
+                  statusId: status.statusId,
+                  statusDescription: status.statusDescription,
+                }
+              : null,
+            propertyArea: property.propertyArea,
+            propertyImagePath: property.propertyImagePath,
+            createdAt: property.createdAt,
+            updatedAt: property.updatedAt,
+          };
+        }),
+      );
+
+      return propertiesWithLookups;
+    } catch (error) {
+      throw new Error(`Failed to fetch properties: ${error.message}`);
+    }
   }
 
   // Get property by ID
-  async findOne(propertyId: number): Promise<Property> {
-    return this.propertyModel.findOne({ propertyId }).exec();
+  async findOne(propertyId: number): Promise<any> {
+    try {
+      const property = await this.propertyModel.findOne({ propertyId }).exec();
+
+      if (!property) {
+        return null;
+      }
+
+      // Manually lookup related data
+      const location = await this.locationModel
+        .findOne({ locationId: property.propertyLocation })
+        .exec();
+
+      const type = await this.typeModel
+        .findOne({ typeId: property.propertyType })
+        .exec();
+
+      const status = await this.statusModel
+        .findOne({ statusId: property.propertyStatus })
+        .exec();
+
+      return {
+        propertyId: property.propertyId,
+        propertyTitle: property.propertyTitle,
+        propertySlug: property.propertySlug,
+        propertyLocation: location
+          ? {
+              locationId: location.locationId,
+              locationDescription: location.locationDescription,
+            }
+          : null,
+        propertyDescription: property.propertyDescription,
+        propertyPrice: property.propertyPrice,
+        propertyType: type
+          ? {
+              typeId: type.typeId,
+              typeDescription: type.typeDescription,
+            }
+          : null,
+        propertyStatus: status
+          ? {
+              statusId: status.statusId,
+              statusDescription: status.statusDescription,
+            }
+          : null,
+        propertyArea: property.propertyArea,
+        propertyImagePath: property.propertyImagePath,
+        createdAt: property.createdAt,
+        updatedAt: property.updatedAt,
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch property: ${error.message}`);
+    }
   }
 
   // Update property
