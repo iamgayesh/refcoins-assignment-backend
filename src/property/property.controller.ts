@@ -6,7 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 
@@ -28,6 +31,42 @@ export class PropertyController {
       return {
         responseCode: '01',
         responseMsg: 'Failed to create property',
+        content: null,
+        exception: error.message,
+      };
+    }
+  }
+
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadPropertyImage(@UploadedFile() file: any) {
+    if (!file) {
+      return {
+        responseCode: '01',
+        responseMsg: 'No file uploaded',
+        content: null,
+        exception: 'File is required',
+      };
+    }
+
+    try {
+      const imageUrl = `/uploads/${file.filename}`;
+      return {
+        responseCode: '00',
+        responseMsg: 'Property image uploaded successfully',
+        content: {
+          originalName: file.originalname,
+          filename: file.filename,
+          size: file.size,
+          mimetype: file.mimetype,
+          url: imageUrl,
+        },
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to upload image',
         content: null,
         exception: error.message,
       };

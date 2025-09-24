@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Test</title>
+</head>
+<body>
+    <h1>Property Image Upload Test</h1>
+    
+    <h2>Single Image Upload</h2>
+    <form id="singleUploadForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload Single Image</button>
+    </form>
+    
+    <h2>Multiple Images Upload</h2>
+    <form id="multipleUploadForm" enctype="multipart/form-data">
+        <input type="file" name="images" accept="image/*" multiple required>
+        <button type="submit">Upload Multiple Images</button>
+    </form>
+
+    <h2>Property Image Upload</h2>
+    <form id="propertyUploadForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload Property Image</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+
+        // Single image upload
+        document.getElementById('singleUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('http://localhost:7000/upload/single', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                resultDiv.innerHTML = '<h3>Single Upload Result:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>Error:</h3><pre>' + error.message + '</pre>';
+            }
+        });
+
+        // Multiple images upload
+        document.getElementById('multipleUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('http://localhost:7000/upload/multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                resultDiv.innerHTML = '<h3>Multiple Upload Result:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>Error:</h3><pre>' + error.message + '</pre>';
+            }
+        });
+
+        // Property image upload
+        document.getElementById('propertyUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('http://localhost:7000/properties/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                resultDiv.innerHTML = '<h3>Property Upload Result:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                
+                // If successful, show the uploaded image
+                if (result.responseCode === '00') {
+                    const imgUrl = 'http://localhost:7000' + result.content.url;
+                    resultDiv.innerHTML += '<br><img src="' + imgUrl + '" style="max-width: 300px; height: auto;" alt="Uploaded image">';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>Error:</h3><pre>' + error.message + '</pre>';
+            }
+        });
+    </script>
+</body>
+</html>
