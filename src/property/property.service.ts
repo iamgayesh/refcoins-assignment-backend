@@ -75,6 +75,9 @@ export class PropertyService {
           : null,
         propertyArea: savedProperty.propertyArea,
         propertyImagePath: savedProperty.propertyImagePath,
+        imageUrl: savedProperty.propertyImagePath
+          ? `http://localhost:7000${savedProperty.propertyImagePath}`
+          : null,
         createdAt: savedProperty.createdAt,
         updatedAt: savedProperty.updatedAt,
       };
@@ -83,7 +86,7 @@ export class PropertyService {
     }
   }
 
-  // Get all properties with manual lookups
+  // Get all properties with manual lookups (non-paginated)
   async findAll(): Promise<any[]> {
     try {
       const properties = await this.propertyModel.find().exec();
@@ -129,6 +132,9 @@ export class PropertyService {
               : null,
             propertyArea: property.propertyArea,
             propertyImagePath: property.propertyImagePath,
+            imageUrl: property.propertyImagePath
+              ? `http://localhost:7000${property.propertyImagePath}`
+              : null,
             createdAt: property.createdAt,
             updatedAt: property.updatedAt,
           };
@@ -136,6 +142,89 @@ export class PropertyService {
       );
 
       return propertiesWithLookups;
+    } catch (error) {
+      throw new Error(`Failed to fetch properties: ${error.message}`);
+    }
+  }
+
+  // Get properties with pagination (3 per page)
+  async findAllPaginated(page: number = 1, limit: number = 3): Promise<any> {
+    try {
+      const skip = (page - 1) * limit;
+
+      // Get total count
+      const totalCount = await this.propertyModel.countDocuments().exec();
+      const totalPages = Math.ceil(totalCount / limit);
+
+      // Get paginated properties
+      const properties = await this.propertyModel
+        .find()
+        .sort({ createdAt: -1 }) // Sort by newest first
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      // Manually lookup related data
+      const propertiesWithLookups = await Promise.all(
+        properties.map(async (property) => {
+          const location = await this.locationModel
+            .findOne({ locationId: property.propertyLocation })
+            .exec();
+
+          const type = await this.typeModel
+            .findOne({ typeId: property.propertyType })
+            .exec();
+
+          const status = await this.statusModel
+            .findOne({ statusId: property.propertyStatus })
+            .exec();
+
+          return {
+            propertyId: property.propertyId,
+            propertyTitle: property.propertyTitle,
+            propertySlug: property.propertySlug,
+            propertyLocation: location
+              ? {
+                  locationId: location.locationId,
+                  locationDescription: location.locationDescription,
+                }
+              : null,
+            propertyDescription: property.propertyDescription,
+            propertyPrice: property.propertyPrice,
+            propertyType: type
+              ? {
+                  typeId: type.typeId,
+                  typeDescription: type.typeDescription,
+                }
+              : null,
+            propertyStatus: status
+              ? {
+                  statusId: status.statusId,
+                  statusDescription: status.statusDescription,
+                }
+              : null,
+            propertyArea: property.propertyArea,
+            propertyImagePath: property.propertyImagePath,
+            imageUrl: property.propertyImagePath
+              ? `http://localhost:7000${property.propertyImagePath}`
+              : null,
+            createdAt: property.createdAt,
+            updatedAt: property.updatedAt,
+          };
+        }),
+      );
+
+      return {
+        data: propertiesWithLookups,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalCount,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      };
     } catch (error) {
       throw new Error(`Failed to fetch properties: ${error.message}`);
     }
@@ -189,6 +278,9 @@ export class PropertyService {
           : null,
         propertyArea: property.propertyArea,
         propertyImagePath: property.propertyImagePath,
+        imageUrl: property.propertyImagePath
+          ? `http://localhost:7000${property.propertyImagePath}`
+          : null,
         createdAt: property.createdAt,
         updatedAt: property.updatedAt,
       };

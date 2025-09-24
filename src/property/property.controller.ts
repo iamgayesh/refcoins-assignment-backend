@@ -6,8 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PropertyService } from './property.service';
@@ -16,6 +18,54 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 @Controller('properties')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
+
+  // Combined endpoint - Create property with image upload
+  @Post('create-with-image')
+  @UseInterceptors(FileInterceptor('image'))
+  async createWithImage(
+    @UploadedFile() file: any,
+    @Body() dto: CreatePropertyDto,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Property image is required');
+    }
+
+    try {
+      // Create the image URL/path
+      const imageUrl = `/uploads/${file.filename}`;
+
+      // Add the image path to the DTO
+      const propertyData = {
+        ...dto,
+        propertyImagePath: imageUrl,
+      };
+
+      const property = await this.propertyService.create(propertyData);
+
+      return {
+        responseCode: '00',
+        responseMsg: 'Property created successfully with image',
+        content: {
+          property,
+          uploadedFile: {
+            originalName: file.originalname,
+            filename: file.filename,
+            size: file.size,
+            mimetype: file.mimetype,
+            url: imageUrl,
+          },
+        },
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to create property',
+        content: null,
+        exception: error.message,
+      };
+    }
+  }
 
   @Post()
   async create(@Body() dto: CreatePropertyDto) {
@@ -37,50 +87,63 @@ export class PropertyController {
     }
   }
 
-  @Post('upload-image')
-  @UseInterceptors(FileInterceptor('image'))
-  async uploadPropertyImage(@UploadedFile() file: any) {
-    if (!file) {
-      return {
-        responseCode: '01',
-        responseMsg: 'No file uploaded',
-        content: null,
-        exception: 'File is required',
-      };
-    }
-
+  @Get()
+  async findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     try {
-      const imageUrl = `/uploads/${file.filename}`;
-      return {
-        responseCode: '00',
-        responseMsg: 'Property image uploaded successfully',
-        content: {
-          originalName: file.originalname,
-          filename: file.filename,
-          size: file.size,
-          mimetype: file.mimetype,
-          url: imageUrl,
-        },
-        exception: null,
-      };
+      // Check if pagination parameters are provided
+      if (page || limit) {
+        const pageNum = parseInt(page || '1', 10);
+        const limitNum = parseInt(limit || '3', 10);
+
+        const result = await this.propertyService.findAllPaginated(
+          pageNum,
+          limitNum,
+        );
+        return {
+          responseCode: '00',
+          responseMsg: 'Properties retrieved successfully',
+          content: result.data,
+          pagination: result.pagination,
+          exception: null,
+        };
+      } else {
+        // Return all properties without pagination
+        const properties = await this.propertyService.findAll();
+        return {
+          responseCode: '00',
+          responseMsg: 'Properties retrieved successfully',
+          content: properties,
+          exception: null,
+        };
+      }
     } catch (error) {
       return {
         responseCode: '01',
-        responseMsg: 'Failed to upload image',
+        responseMsg: 'Failed to retrieve properties',
         content: null,
         exception: error.message,
       };
     }
   }
 
-  @Get()
-  async findAll() {
+  @Get('paginated')
+  async findAllPaginated(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '3',
+  ) {
     try {
-      const properties = await this.propertyService.findAll();
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+
+      const result = await this.propertyService.findAllPaginated(
+        pageNum,
+        limitNum,
+      );
       return {
         responseCode: '00',
         responseMsg: 'Properties retrieved successfully',
-        content: properties,
+        content: result.data,
+        pagination: result.pagination,
         exception: null,
       };
     } catch (error) {

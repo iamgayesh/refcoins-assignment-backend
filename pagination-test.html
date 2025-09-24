@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties with Pagination Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .property-card { 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+            background: #fafafa; 
+        }
+        .property-image { 
+            max-width: 200px; 
+            height: 150px; 
+            object-fit: cover; 
+            border-radius: 4px; 
+            float: left; 
+            margin-right: 15px; 
+        }
+        .property-details { 
+            overflow: hidden; 
+        }
+        .pagination { 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+        .pagination button { 
+            margin: 0 5px; 
+            padding: 8px 16px; 
+            border: 1px solid #ddd; 
+            background: white; 
+            cursor: pointer; 
+            border-radius: 4px; 
+        }
+        .pagination button:hover { 
+            background: #f0f0f0; 
+        }
+        .pagination button:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+        .pagination .active { 
+            background: #007bff; 
+            color: white; 
+        }
+        .clear { 
+            clear: both; 
+        }
+        .loading { 
+            text-align: center; 
+            color: #666; 
+        }
+        .api-buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .api-buttons button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-paginated { background: #28a745; }
+        .btn-all { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Properties with Pagination & Images</h1>
+        
+        <div class="api-buttons">
+            <button class="btn-paginated" onclick="loadPaginatedProperties(1)">Load Paginated (3 per page)</button>
+            <button class="btn-all" onclick="loadAllProperties()">Load All Properties</button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">Loading properties...</div>
+        
+        <div id="properties-container"></div>
+        
+        <div id="pagination-container" class="pagination"></div>
+        
+        <div id="pagination-info" style="text-align: center; margin: 10px 0; color: #666;"></div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let paginationInfo = {};
+
+        // Load paginated properties
+        async function loadPaginatedProperties(page = 1) {
+            currentPage = page;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('properties-container').innerHTML = '';
+            document.getElementById('pagination-container').innerHTML = '';
+            
+            try {
+                const response = await fetch(`http://localhost:7000/properties/paginated?page=${page}&limit=3`);
+                const result = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (result.responseCode === '00') {
+                    displayProperties(result.content);
+                    paginationInfo = result.pagination;
+                    displayPagination(result.pagination);
+                    displayPaginationInfo(result.pagination);
+                } else {
+                    document.getElementById('properties-container').innerHTML = `<p>Error: ${result.responseMsg}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('properties-container').innerHTML = `<p>Network Error: ${error.message}</p>`;
+            }
+        }
+
+        // Load all properties (no pagination)
+        async function loadAllProperties() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('properties-container').innerHTML = '';
+            document.getElementById('pagination-container').innerHTML = '';
+            document.getElementById('pagination-info').innerHTML = '';
+            
+            try {
+                const response = await fetch('http://localhost:7000/properties');
+                const result = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (result.responseCode === '00') {
+                    displayProperties(result.content);
+                    document.getElementById('pagination-info').innerHTML = `<strong>Showing all ${result.content.length} properties</strong>`;
+                } else {
+                    document.getElementById('properties-container').innerHTML = `<p>Error: ${result.responseMsg}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('properties-container').innerHTML = `<p>Network Error: ${error.message}</p>`;
+            }
+        }
+
+        // Display properties
+        function displayProperties(properties) {
+            const container = document.getElementById('properties-container');
+            
+            if (properties.length === 0) {
+                container.innerHTML = '<p>No properties found.</p>';
+                return;
+            }
+            
+            const html = properties.map(property => `
+                <div class="property-card">
+                    ${property.imageUrl ? 
+                        `<img src="${property.imageUrl}" alt="${property.propertyTitle}" class="property-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRTVFN0VCIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iNzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZCNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';">` : 
+                        `<div class="property-image" style="background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">No Image</div>`
+                    }
+                    <div class="property-details">
+                        <h3>${property.propertyTitle}</h3>
+                        <p><strong>ID:</strong> ${property.propertyId}</p>
+                        <p><strong>Location:</strong> ${property.propertyLocation?.locationDescription || 'N/A'}</p>
+                        <p><strong>Type:</strong> ${property.propertyType?.typeDescription || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${property.propertyStatus?.statusDescription || 'N/A'}</p>
+                        <p><strong>Price:</strong> $${property.propertyPrice?.toLocaleString()}</p>
+                        <p><strong>Area:</strong> ${property.propertyArea} sq ft</p>
+                        <p><strong>Description:</strong> ${property.propertyDescription}</p>
+                        <p><strong>Slug:</strong> ${property.propertySlug}</p>
+                        ${property.propertyImagePath ? `<p><strong>Image Path:</strong> ${property.propertyImagePath}</p>` : ''}
+                    </div>
+                    <div class="clear"></div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // Display pagination controls
+        function displayPagination(pagination) {
+            const container = document.getElementById('pagination-container');
+            
+            if (pagination.totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button onclick="loadPaginatedProperties(${pagination.currentPage - 1})" 
+                     ${!pagination.hasPreviousPage ? 'disabled' : ''}>Previous</button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                html += `<button onclick="loadPaginatedProperties(${i})" 
+                         class="${i === pagination.currentPage ? 'active' : ''}">${i}</button>`;
+            }
+            
+            // Next button
+            html += `<button onclick="loadPaginatedProperties(${pagination.currentPage + 1})" 
+                     ${!pagination.hasNextPage ? 'disabled' : ''}>Next</button>`;
+            
+            container.innerHTML = html;
+        }
+
+        // Display pagination info
+        function displayPaginationInfo(pagination) {
+            const info = `
+                <strong>Page ${pagination.currentPage} of ${pagination.totalPages}</strong> | 
+                Showing ${pagination.itemsPerPage} items per page | 
+                Total: ${pagination.totalItems} properties
+            `;
+            document.getElementById('pagination-info').innerHTML = info;
+        }
+
+        // Load initial data
+        window.onload = () => {
+            loadPaginatedProperties(1);
+        };
+    </script>
+</body>
+</html>
