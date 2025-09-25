@@ -9,4 +9,14 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('test')
+  getTest() {
+    return {
+      responseCode: '00',
+      responseMsg: 'Success',
+      content: { message: 'Backend is working with CORS!' },
+      exception: null,
+    };
+  }
 }

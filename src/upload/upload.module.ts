@@ -1,23 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { PropertyController } from './property.controller';
-import { PropertyService } from './property.service';
-import { Property, PropertySchema } from './property.schema';
-import { Location, LocationSchema } from '../location/location.schema';
-import { Type, TypeSchema } from '../type/type.schema';
-import { Status, StatusSchema } from '../status/status.schema';
+import { UploadController } from './upload.controller';
+import { UploadService } from './upload.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Property.name, schema: PropertySchema },
-      { name: Location.name, schema: LocationSchema },
-      { name: Type.name, schema: TypeSchema },
-      { name: Status.name, schema: StatusSchema },
-    ]),
     MulterModule.register({
       storage: diskStorage({
         destination: (req, file, cb) => {
@@ -44,8 +33,8 @@ import { Status, StatusSchema } from '../status/status.schema';
       },
     }),
   ],
-  controllers: [PropertyController],
-  providers: [PropertyService],
-  exports: [PropertyService],
+  controllers: [UploadController],
+  providers: [UploadService],
+  exports: [UploadService],
 })
-export class PropertyModule {}
+export class UploadModule {}

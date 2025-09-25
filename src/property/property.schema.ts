@@ -12,7 +12,7 @@ export class Property extends Document {
   @Prop({ required: true, unique: true })
   propertySlug: string;
 
-  @Prop({ type: Number, ref: 'Location', required: true })
+  @Prop({ type: Number, required: true })
   propertyLocation: number; // refers to locationId
 
   @Prop()
@@ -21,10 +21,10 @@ export class Property extends Document {
   @Prop({ required: true })
   propertyPrice: number; // LKR prefix handled in frontend
 
-  @Prop({ type: Number, ref: 'Type', required: true })
+  @Prop({ type: Number, required: true })
   propertyType: number; // refers to typeId
 
-  @Prop({ type: Number, ref: 'Status', required: true })
+  @Prop({ type: Number, required: true })
   propertyStatus: number; // refers to statusId
 
   @Prop({ required: true })

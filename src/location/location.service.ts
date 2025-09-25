@@ -9,18 +9,59 @@ export class LocationService {
     @InjectModel(Location.name) private locationModel: Model<Location>,
   ) {}
 
-  async create(
-    locationId: number,
-    locationDescription: string,
-  ): Promise<Location> {
-    const location = new this.locationModel({
-      locationId,
-      locationDescription,
-    });
-    return location.save();
+  // Create a new location with wrapped response
+  async create(locationId: number, locationDescription: string): Promise<any> {
+    // default error response
+    let response = {
+      responseCode: '01',
+      responseMsg: 'Failed to create location',
+      content: null,
+      exception: null,
+    };
+
+    try {
+      const location = new this.locationModel({
+        locationId,
+        locationDescription,
+      });
+      const saved = await location.save();
+
+      response = {
+        responseCode: '00',
+        responseMsg: 'Success',
+        content: saved,
+        exception: null,
+      };
+    } catch (error) {
+      response.exception = error.message;
+    }
+
+    return response;
   }
 
-  async findAll(): Promise<Location[]> {
-    return this.locationModel.find().exec();
+  // Get all locations with wrapped response
+  async findAll(): Promise<any> {
+    // default error response
+    let response = {
+      responseCode: '01',
+      responseMsg: 'Failed to retrieve locations',
+      content: [],
+      exception: null,
+    };
+
+    try {
+      const locations = await this.locationModel.find().exec();
+
+      response = {
+        responseCode: '00',
+        responseMsg: 'Success',
+        content: locations,
+        exception: null,
+      };
+    } catch (error) {
+      response.exception = error.message;
+    }
+
+    return response;
   }
 }

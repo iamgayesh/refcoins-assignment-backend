@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Combined Property Creation</title>
+</head>
+<body>
+    <h1>Test Combined Property Creation with Image Upload</h1>
+    
+    <form id="propertyForm" enctype="multipart/form-data">
+        <div>
+            <label>Property Title:</label>
+            <input type="text" name="propertyTitle" value="Test Property" required>
+        </div>
+        
+        <div>
+            <label>Property Slug:</label>
+            <input type="text" name="propertySlug" value="test-property-123" required>
+        </div>
+        
+        <div>
+            <label>Location ID:</label>
+            <input type="number" name="propertyLocation" value="1" required>
+        </div>
+        
+        <div>
+            <label>Property Type ID:</label>
+            <input type="number" name="propertyType" value="1" required>
+        </div>
+        
+        <div>
+            <label>Property Status ID:</label>
+            <input type="number" name="propertyStatus" value="1" required>
+        </div>
+        
+        <div>
+            <label>Price:</label>
+            <input type="number" name="propertyPrice" value="100000" required>
+        </div>
+        
+        <div>
+            <label>Area:</label>
+            <input type="number" name="propertyArea" value="1500" required>
+        </div>
+        
+        <div>
+            <label>Description:</label>
+            <textarea name="propertyDescription" required>Test property description</textarea>
+        </div>
+        
+        <div>
+            <label>Property Image:</label>
+            <input type="file" name="image" accept="image/*" required>
+        </div>
+        
+        <button type="submit">Create Property with Image</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<p>Creating property...</p>';
+                
+                const response = await fetch('http://localhost:7000/properties/create-with-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.responseCode === '00') {
+                    resultDiv.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                        <p><strong>Image URL:</strong> <a href="http://localhost:7000${result.content.uploadedFile.url}" target="_blank">View Image</a></p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p>${result.responseMsg}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Network Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
