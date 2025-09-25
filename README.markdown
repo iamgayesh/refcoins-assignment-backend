@@ -112,9 +112,19 @@ cd refcoins-assignment-backend
 
 ```bash
 npm install
-```
+ ```
 
-### 3. Start MongoDB
+### 3. Configure Environment Variables:
+   Create a `.env` file in the root directory with the following:
+
+   ```env
+   MONGO_URI=mongodb://localhost:27017/refcoinsDB
+   PORT=7000
+   NODE_ENV=development
+   JWT_SECRET=<secure-random-string>
+   ```
+
+### 4. Start MongoDB
 
 - **Windows Service**:
   ```bash
@@ -126,7 +136,7 @@ npm install
   ```
 - **MongoDB Compass**: Connect to `mongodb://localhost:27017`.
 
-### 4. Create Image Storage Directory
+### 5. Create Image Storage Directory
 
 ```bash
 # Windows
@@ -136,7 +146,7 @@ mkdir C:\REFCOINS
 mkdir ~/REFCOINS
 ```
 
-### 5. Start the Server
+### 6. Start the Server
 
 ```bash
 # Development mode (auto-restarts on changes)
@@ -146,7 +156,7 @@ npm run start:dev
 npm run start:prod
 ```
 
-### 6. Verify
+### 7. Verify
 
 - Visit `http://localhost:7000/properties` in a browser.
 - Expected output: JSON array (e.g., `[]` if no properties exist).
