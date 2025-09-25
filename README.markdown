@@ -113,6 +113,10 @@ cd refcoins-assignment-backend
 ```bash
 npm install
  ```
+ If this does not work due to dependency conflicts, use:
+ ```bash
+npm install --legacy-peer-deps
+ ```
 
 ### 3. Configure Environment Variables:
    Create a `.env` file in the root directory with the following:
