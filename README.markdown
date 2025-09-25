@@ -168,8 +168,8 @@ npm run start:prod
 
 | Method | Endpoint          | Description       | Example Body                                              |
 |--------|-------------------|-------------------|-----------------------------------------------------------|
-| `POST` | `/auth/login`     | User login        | `{"email": "admin@admin.com", "password": "admin123"}`    |
-| `POST` | `/auth/register`  | User registration | `{"name": "John", "email": "john@example.com", "password": "password123"}` |
+| `POST` | `/auth/login`     | User login        | `{"username": "admin", "password": "admin123"}`    |
+| `POST` | `/auth/register`  | User registration | `{"username": "admin", "usertype": "ADMIN", "password": "admin123"}` |
 
 ### 📋 Lookup Data
 
