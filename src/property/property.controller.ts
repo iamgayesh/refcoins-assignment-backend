@@ -156,6 +156,46 @@ export class PropertyController {
     }
   }
 
+  @Get('search')
+  async searchProperties(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '3',
+    @Query('locationId') locationId?: string,
+    @Query('statusId') statusId?: string,
+    @Query('typeId') typeId?: string,
+  ) {
+    try {
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+
+      const filters = {
+        locationId: locationId ? parseInt(locationId, 10) : undefined,
+        statusId: statusId ? parseInt(statusId, 10) : undefined,
+        typeId: typeId ? parseInt(typeId, 10) : undefined,
+      };
+
+      const result = await this.propertyService.searchProperties(
+        pageNum,
+        limitNum,
+        filters,
+      );
+      return {
+        responseCode: '00',
+        responseMsg: 'Properties searched successfully',
+        content: result.data,
+        pagination: result.pagination,
+        exception: null,
+      };
+    } catch (error) {
+      return {
+        responseCode: '01',
+        responseMsg: 'Failed to search properties',
+        content: null,
+        exception: error.message,
+      };
+    }
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number) {
     try {

@@ -147,6 +147,110 @@ export class PropertyService {
     }
   }
 
+  // Search properties with filters and pagination
+  async searchProperties(
+    page: number = 1,
+    limit: number = 3,
+    filters: {
+      locationId?: number;
+      statusId?: number;
+      typeId?: number;
+    },
+  ): Promise<any> {
+    try {
+      const skip = (page - 1) * limit;
+
+      // Build query based on filters
+      const query: any = {};
+      if (filters.locationId) {
+        query.propertyLocation = filters.locationId;
+      }
+      if (filters.statusId) {
+        query.propertyStatus = filters.statusId;
+      }
+      if (filters.typeId) {
+        query.propertyType = filters.typeId;
+      }
+
+      // Get total count with filters
+      const totalCount = await this.propertyModel.countDocuments(query).exec();
+      const totalPages = Math.ceil(totalCount / limit);
+
+      // Get filtered and paginated properties
+      const properties = await this.propertyModel
+        .find(query)
+        .sort({ createdAt: -1 }) // Sort by newest first
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      // Manually lookup related data
+      const propertiesWithLookups = await Promise.all(
+        properties.map(async (property) => {
+          const location = await this.locationModel
+            .findOne({ locationId: property.propertyLocation })
+            .exec();
+
+          const type = await this.typeModel
+            .findOne({ typeId: property.propertyType })
+            .exec();
+
+          const status = await this.statusModel
+            .findOne({ statusId: property.propertyStatus })
+            .exec();
+
+          return {
+            propertyId: property.propertyId,
+            propertyTitle: property.propertyTitle,
+            propertySlug: property.propertySlug,
+            propertyLocation: location
+              ? {
+                  locationId: location.locationId,
+                  locationDescription: location.locationDescription,
+                }
+              : null,
+            propertyDescription: property.propertyDescription,
+            propertyPrice: property.propertyPrice,
+            propertyType: type
+              ? {
+                  typeId: type.typeId,
+                  typeDescription: type.typeDescription,
+                }
+              : null,
+            propertyStatus: status
+              ? {
+                  statusId: status.statusId,
+                  statusDescription: status.statusDescription,
+                }
+              : null,
+            propertyArea: property.propertyArea,
+            propertyImagePath: property.propertyImagePath,
+            imageUrl: property.propertyImagePath
+              ? `http://localhost:7000${property.propertyImagePath}`
+              : null,
+            createdAt: property.createdAt,
+            updatedAt: property.updatedAt,
+          };
+        }),
+      );
+
+      return {
+        data: propertiesWithLookups,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalCount,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+        appliedFilters: filters,
+      };
+    } catch (error) {
+      throw new Error(`Failed to search properties: ${error.message}`);
+    }
+  }
+
   // Get properties with pagination (3 per page)
   async findAllPaginated(page: number = 1, limit: number = 3): Promise<any> {
     try {
