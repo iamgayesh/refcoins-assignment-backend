@@ -123,8 +123,16 @@ npm install
    NODE_ENV=development
    JWT_SECRET=<secure-random-string>
    ```
+### 4. Seed the Database:
+   The `src/seed.ts` script populates the database with initial data (e.g., locations, statuses, types). Run it **before starting the server**:
 
-### 4. Start MongoDB
+   ```bash
+   npx ts-node src/seed.ts
+   ```
+
+   Ensure MongoDB is running and the `MONGO_URI` is correct.
+
+### 5. Start MongoDB
 
 - **Windows Service**:
   ```bash
@@ -136,7 +144,7 @@ npm install
   ```
 - **MongoDB Compass**: Connect to `mongodb://localhost:27017`.
 
-### 5. Create Image Storage Directory
+### 6. Create Image Storage Directory
 
 ```bash
 # Windows
@@ -146,7 +154,7 @@ mkdir C:\REFCOINS
 mkdir ~/REFCOINS
 ```
 
-### 6. Start the Server
+### 7. Start the Server
 
 ```bash
 # Development mode (auto-restarts on changes)
@@ -156,7 +164,7 @@ npm run start:dev
 npm run start:prod
 ```
 
-### 7. Verify
+### 8. Verify
 
 - Visit `http://localhost:7000/properties` in a browser.
 - Expected output: JSON array (e.g., `[]` if no properties exist).
